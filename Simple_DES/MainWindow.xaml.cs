@@ -1,4 +1,5 @@
-﻿using System;
+// Не забудь УБРАТЬ ЛИШНИЕ БИБЛИОТЕКИ
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
