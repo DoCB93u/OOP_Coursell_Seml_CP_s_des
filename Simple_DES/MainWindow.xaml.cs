@@ -55,6 +55,7 @@ namespace Simple_DES
         }
     }
 
+
     public static class S_DES
     {
         public static string CharToBitString(char ch) //потом убрать
