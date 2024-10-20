@@ -2,19 +2,14 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Markup;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
 using System.Windows.Shapes;
 
 namespace Simple_DES
@@ -44,7 +39,7 @@ namespace Simple_DES
 
             foreach (char c in data)
             {
-                resultBuilder.Append(S_DES.Cipher(c));
+                resultBuilder.Append(S_DES.Cipher(c, key));
             }
 
             Result_TextBlock.Text = resultBuilder.ToString();
@@ -59,6 +54,7 @@ namespace Simple_DES
 
     public static class S_DES
     {
+        private static int[] P10_arr = { 2,4,1,6,3,9,0,8,7,5 }; //Перестановка Р10: { 3 5 2 7 4 10 1 9 8 6 }
         public static string CharToBitString(char ch) //потом убрать
         {
             byte[] bytes = Encoding.ASCII.GetBytes(new char[] { ch });
@@ -80,6 +76,14 @@ namespace Simple_DES
             return bitArray;
         }
 
+        public static BitArray IntToBit (int value)
+        {
+            byte[] bytes = BitConverter.GetBytes(value);
+            BitArray bitArray = new BitArray(bytes);
+
+            return bitArray;
+        }
+
         public static string BitToString(BitArray bitArray)
         {
             StringBuilder bitString = new StringBuilder();
@@ -90,6 +94,36 @@ namespace Simple_DES
             }
 
             return bitString.ToString();
+        }
+
+        public static BitArray P10(BitArray bitArray)
+        {
+            int length = bitArray.Length;
+            BitArray bitArray_temp = new BitArray(length);
+
+            for(int i = 0; i < 10;  i++)
+            {
+                bitArray_temp[i] = bitArray[P10_arr[i]];  
+            }
+
+            return bitArray_temp;
+        }
+
+        public static BitArray CSlideLeft (BitArray bitArray)
+        {
+            int length = bitArray.Length;
+            BitArray bitArray_temp = new BitArray(length);
+
+            bool firstBit = bitArray[0];
+
+            for (int i = 1; i < length; i++)
+            {
+                bitArray_temp[i - 1] = bitArray[i];
+            }
+
+            bitArray_temp[length - 1] = firstBit;
+
+            return bitArray_temp;
         }
 
         public static BitArray Reverse(BitArray bitArray)
@@ -104,12 +138,19 @@ namespace Simple_DES
             return bitArray_temp;
         }
 
-        public static string Cipher(char ch)
+        public static string Cipher(char ch, int key)
         {
-            BitArray bitArray = CharToBit(ch);
-            bitArray = Reverse(bitArray);
+            BitArray bitArray_char = new BitArray(8);
+            BitArray bitArray_key = new BitArray(10);
+
+            bitArray_key = IntToBit(key);
+            bitArray_key = Reverse(bitArray_key);
+            bitArray_char = CharToBit(ch);
+            bitArray_char = Reverse(bitArray_char);
+
+            bitArray_key = CSlideLeft(bitArray_key);
      
-            return BitToString(bitArray);
+            return BitToString(bitArray_char);
         }
     }
 
