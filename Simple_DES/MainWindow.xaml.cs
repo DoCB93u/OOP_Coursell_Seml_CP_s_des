@@ -56,7 +56,8 @@ namespace Simple_DES
     {
         private readonly static int[] P10_arr = { 2 ,4 ,1 ,6 ,3 ,9 ,0 ,8 ,7 ,5 }; //Перестановка Р10: { 3 5 2 7 4 10 1 9 8 6 }
         private readonly static int[] P8_arr = { 5, 2, 6, 3, 7, 4, 9, 8 }; //Перестановка Р8: { 6 3 7 4 8 5 10 9 - - }
-        private readonly static int[] IP_arr = { 1, 5, 4, 0, 3, 7, 4, 6 }; //Перестановка IP: { 2 6 3 1 4 8 5 7 }
+        private readonly static int[] IP_arr = { 1, 5, 2, 0, 3, 7, 4, 6 }; //Перестановка IP: { 2 6 3 1 4 8 5 7 }
+        private readonly static int[] E_P_arr = { 3, 0, 1, 2, 1, 2, 3, 0 }; //E/P: { 4 1 2 3 2 3 4 1}
         public static string CharToBitString(char ch) //потом убрать
         {
             byte[] bytes = Encoding.ASCII.GetBytes(new char[] { ch });
@@ -133,7 +134,25 @@ namespace Simple_DES
         public static BitArray IP(BitArray bitArray)
         {
             int length = bitArray.Length;
-            BitArray bitArray_temp = new BitArray(length - 2);
+            BitArray bitArray_temp = new BitArray(length);
+
+            for(int i = 0; i < length; i++)
+            {
+                bitArray_temp[i] = bitArray[IP_arr[i]];
+            }
+
+            return bitArray_temp;
+        }
+
+        public static BitArray E_P (BitArray bitArray)
+        {
+            int length = bitArray.Length;
+            BitArray bitArray_temp = new BitArray(length*2);
+
+            for(int i = 0; i < length*2; i++)
+            {
+                bitArray_temp[i] = bitArray[E_P_arr[i]];
+            }
 
             return bitArray_temp;
         }
@@ -164,11 +183,6 @@ namespace Simple_DES
                 bitArray_temp[i - 1] = bitArray[i];
             }
             bitArray_temp[length - 1] = firstBitSecondHalf;
-/*
-            for (int i = 0; i < length; i++)
-            {
-                MessageBox.Show(bitArray_temp[i].ToString());
-            }*/
 
             return bitArray_temp; // Возвращаем измененный массив
         }
@@ -183,9 +197,29 @@ namespace Simple_DES
                 bitArray_temp[i] = bitArray[length - 1 - i];
             }
 
-
-
             return bitArray_temp;
+        }
+
+        public static void FeistelAlgorithm(BitArray bitArray, BitArray key)
+        {
+            int length = bitArray.Length;
+            BitArray bitArrayLeft = new BitArray(length/2);
+            BitArray bitArrayRight = new BitArray(length/2);
+
+            for (int i = 0; i < length; i++)
+            {
+                if(i < length/2)
+                {
+                    bitArrayLeft[i] = bitArray[i];
+                }
+
+                else
+                {
+                    bitArrayRight[i - length/2] = bitArray[i];
+                }
+            }
+
+            bitArrayRight = E_P(bitArrayRight); //bitArrayRigth теперь длинною 8
         }
 
         public static string Cipher(char ch, int key)
@@ -218,8 +252,11 @@ namespace Simple_DES
             bitArray_char = CharToBit(ch);
             bitArray_char = Reverse(bitArray_char);
 
-            return BitToString(bitArray_key_final2);
+            //Перестановка IP
+            bitArray_char = IP(bitArray_char);
+            FeistelAlgorithm(bitArray_char, bitArray_key_final1);
+
+            return BitToString(bitArray_char);
         }
     }
-
 }
